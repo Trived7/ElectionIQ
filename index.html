@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectionIQ - Your Indian Election Assistant</title>
+    <meta name="description"
+        content="An interactive assistant that helps Indian users understand the election process step by step.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="background-animation"></div>
+
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo-container">
+                <div class="logo-icon">🗳️</div>
+                <h1>ElectionIQ</h1>
+            </div>
+
+        </header>
+
+        <main class="chat-container" id="chat-container">
+            <div class="welcome-screen" id="welcome-screen">
+                <div class="welcome-icon">🇮🇳</div>
+                <h2>Namaste! Let's learn about elections.</h2>
+                <p>I'm ElectionIQ, your guide to the Indian democratic process. Ask me anything or choose a topic below.
+                </p>
+
+                <div class="suggested-topics">
+                    <button class="topic-chip">Voter Registration Process</button>
+                    <button class="topic-chip">How do EVM machines work?</button>
+                    <button class="topic-chip">General Election Timeline</button>
+                    <button class="topic-chip">What happens on Voting Day?</button>
+                    <button class="topic-chip">How are results counted?</button>
+                </div>
+            </div>
+
+            <div class="messages" id="messages-area">
+                <!-- Messages will be injected here -->
+            </div>
+
+            <div class="typing-indicator hidden" id="typing-indicator">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </main>
+
+        <footer class="input-area">
+            <form id="chat-form">
+                <input type="text" id="user-input" placeholder="Ask a question about Indian elections..."
+                    autocomplete="off" required>
+                <button type="submit" id="send-btn" aria-label="Send message">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </form>
+        </footer>
+    </div>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
