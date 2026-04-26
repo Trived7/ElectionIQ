@@ -1,5 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
+    // --- State & Config ---
+    let apiKey = localStorage.getItem('electioniq_api_key') || '';
+    let chatHistory = [];
+
+    // Tenglish System Instruction
+    const systemInstruction = `You are ElectionIQ, a premium civic-tech dashboard assistant. 
+    You help Indian users understand the election process (voter registration, EVMs, timelines, counting).
+    IMPORTANT: Respond in 'Tenglish' (a mix of Telugu and English) to make it highly relatable to users from Andhra Pradesh and Telangana. Keep it natural, polite, and respectful. Use markdown for formatting. If they ask completely unrelated questions, politely guide them back to elections in Tenglish.`;
+
+    // --- DOM Elements ---
+
+    // Navigation
+    const navItems = document.querySelectorAll('.nav-item');
+    const panels = document.querySelectorAll('.panel');
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+
+    // Chat
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
     const messagesArea = document.getElementById('messages-area');
@@ -7,43 +24,111 @@ document.addEventListener('DOMContentLoaded', () => {
     const typingIndicator = document.getElementById('typing-indicator');
     const topicChips = document.querySelectorAll('.topic-chip');
 
-    // Local Knowledge Base
-    const knowledgeBase = [
-        {
-            keywords: ["register", "voter id", "apply", "eligible", "registration", "document", "online", "offline"],
-            response: "**Voter Registration Process:**\n- **Eligibility:** You must be an Indian citizen and 18 years or older.\n- **How to register:** You can apply **online** via the Voter Helpline App or the ECI's NVSP portal, or **offline** by submitting Form 6 to your local Electoral Registration Officer (ERO).\n- **Documents needed:** Proof of Identity, Proof of Address, and Proof of Age (e.g., Aadhaar card, PAN card, Passport, or 10th standard certificate)."
-        },
-        {
-            keywords: ["evm", "machine", "electronic voting", "voter verifiable", "vvpat", "how do evm machines work?"],
-            response: "**EVM Machines & VVPAT:**\n- **What they are:** EVMs (Electronic Voting Machines) are used to cast votes securely.\n- **How they work:** They consist of a Control Unit (with the polling officer) and a Balloting Unit (where you press the button next to your candidate's symbol).\n- **VVPAT:** The Voter Verifiable Paper Audit Trail machine sits next to the EVM. When you vote, it prints a slip showing the candidate you voted for, which is visible for 7 seconds before falling into a sealed box, ensuring transparency."
-        },
-        {
-            keywords: ["timeline", "date", "schedule", "when", "phases", "campaign"],
-            response: "**Election Timeline:**\n1. **Announcement:** The Election Commission of India (ECI) announces the schedule, bringing the Model Code of Conduct into effect.\n2. **Nominations:** Candidates file their nomination papers.\n3. **Campaigning:** Political parties campaign. This strictly ends 48 hours before polling begins.\n4. **Voting:** Held in single or multiple phases depending on the region's size.\n5. **Results:** Counting is done on a pre-scheduled day, and winners are declared."
-        },
-        {
-            keywords: ["voting day", "polling", "steps", "what to do", "ink", "what happens on voting day?", "carry"],
-            response: "**Voting Day Steps:**\n1. **What to carry:** Your Voter ID (EPIC) or another ECI-approved valid photo ID (like Aadhaar or PAN card).\n2. **Check-in:** The polling official checks your name on the voter list.\n3. **Verification:** Your identity is verified, and your finger is marked with indelible ink.\n4. **Sign:** You sign the register.\n5. **Vote:** You proceed to the voting compartment, press the button on the EVM, and verify your choice on the VVPAT slip."
-        },
-        {
-            keywords: ["result", "count", "winner", "counting", "how are results counted?", "declaration"],
-            response: "**How Results are Counted:**\n- **EVM Counting:** On the scheduled counting day, EVMs are brought to counting centers under heavy security. They are unsealed in the presence of candidates or their agents.\n- **Tallying:** Votes are tallied electronically from the Control Unit.\n- **Declaration:** The candidate with the highest number of votes in a constituency is declared the winner by the Returning Officer."
-        },
-        {
-            keywords: ["eci", "election commission", "role", "function", "who conducts"],
-            response: "**Election Commission of India (ECI):**\n- **Role:** The ECI is an autonomous constitutional authority responsible for administering election processes in India at the national and state levels.\n- **Functions:** It prepares the electoral rolls, schedules elections, enforces the Model Code of Conduct, registers political parties, and ensures free and fair elections."
-        },
-        {
-            keywords: ["hello", "hi", "namaste", "hey"],
-            response: "Namaste! I'm ElectionIQ. I can answer questions about voter registration, EVMs, election timelines, voting day steps, result counting, and the Election Commission of India. How can I help you today?"
+    // Settings
+    const apiKeyInput = document.getElementById('api-key-input');
+    const saveKeyBtn = document.getElementById('save-key-btn');
+    const apiStatus = document.getElementById('api-status');
+
+    // Onboarding Elements
+    const onboardingOverlay = document.getElementById('onboarding-overlay');
+    const mainDashboard = document.getElementById('main-dashboard');
+    const onboardingApiKey = document.getElementById('onboarding-api-key');
+    const startAppBtn = document.getElementById('start-app-btn');
+    const skipOnboardingBtn = document.getElementById('skip-onboarding-btn');
+    const onboardingStatus = document.getElementById('onboarding-status');
+
+    // --- Initialization ---
+    if (apiKey) {
+        apiKeyInput.value = apiKey;
+        showDashboard();
+    } else {
+        // Show onboarding if no key
+        onboardingOverlay.style.display = 'flex';
+        mainDashboard.style.display = 'none';
+    }
+
+    // --- Helper Functions for Onboarding ---
+    function showDashboard() {
+        onboardingOverlay.style.display = 'none';
+        mainDashboard.style.display = 'flex';
+    }
+
+    function handleOnboardingSubmit() {
+        const newKey = onboardingApiKey.value.trim();
+        if (newKey) {
+            apiKey = newKey;
+            localStorage.setItem('electioniq_api_key', apiKey);
+            apiKeyInput.value = apiKey; // Update settings input too
+            showDashboard();
+        } else {
+            onboardingStatus.textContent = 'Please enter a valid key.';
+            onboardingStatus.style.color = '#ff3333';
+            setTimeout(() => { onboardingStatus.textContent = ''; }, 3000);
         }
-    ];
+    }
 
-    const defaultResponse = "I'm focusing specifically on Indian elections right now (registration, EVMs, timelines, voting, counting, and the ECI). Could you ask something related to those topics?";
+    // --- Event Listeners ---
 
-    // Event Listeners
-    chatForm.addEventListener('submit', handleSubmit);
+    // Onboarding Events
+    startAppBtn.addEventListener('click', handleOnboardingSubmit);
 
+    // Allow enter key in onboarding input
+    onboardingApiKey.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleOnboardingSubmit();
+        }
+    });
+
+    skipOnboardingBtn.addEventListener('click', () => {
+        showDashboard();
+        // Warn them they still need a key
+        document.querySelector('[data-target="about-panel"]').click();
+        apiStatus.textContent = 'You skipped setup. Please add a key to use the chat.';
+        apiStatus.style.color = '#FF9933'; // Warning color
+    });
+
+    // Mobile Menu Toggle
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+    });
+
+    // Panel Navigation
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            // Update Active Tab
+            navItems.forEach(n => n.classList.remove('active'));
+            item.classList.add('active');
+
+            // Switch Panel
+            const targetId = item.getAttribute('data-target');
+            panels.forEach(p => {
+                p.classList.remove('active');
+                if (p.id === targetId) {
+                    p.classList.add('active');
+                }
+            });
+
+            // Close mobile menu if open
+            sidebar.classList.remove('open');
+        });
+    });
+
+    // API Key Save
+    saveKeyBtn.addEventListener('click', () => {
+        const newKey = apiKeyInput.value.trim();
+        if (newKey) {
+            apiKey = newKey;
+            localStorage.setItem('electioniq_api_key', apiKey);
+            apiStatus.textContent = 'Key saved successfully!';
+            apiStatus.style.color = 'var(--neon-green)';
+        } else {
+            apiStatus.textContent = 'Please enter a valid key.';
+            apiStatus.style.color = '#ff3333';
+        }
+        setTimeout(() => { apiStatus.textContent = ''; }, 3000);
+    });
+
+    // Chat Suggestions
     topicChips.forEach(chip => {
         chip.addEventListener('click', () => {
             userInput.value = chip.textContent;
@@ -51,47 +136,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    async function handleSubmit(e) {
+    // Chat Submit
+    chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const message = userInput.value.trim();
 
         if (!message) return;
 
-        // Hide welcome screen on first message
+        if (!apiKey) {
+            // Switch to about panel to show settings
+            document.querySelector('[data-target="about-panel"]').click();
+            apiStatus.textContent = 'Please configure your API key first to use the chat!';
+            apiStatus.style.color = '#ff3333';
+            return;
+        }
+
         if (welcomeScreen.style.display !== 'none') {
             welcomeScreen.style.display = 'none';
         }
 
-        // Add user message to UI
         addMessageToUI(message, 'user');
         userInput.value = '';
-
-        // Show typing indicator
         showTypingIndicator();
 
-        // Simulate network delay to feel like AI
-        setTimeout(() => {
-            const response = generateLocalResponse(message);
+        try {
+            const response = await fetchGeminiResponse(message);
             hideTypingIndicator();
             addMessageToUI(response, 'bot');
-        }, 800 + Math.random() * 600); // 0.8s to 1.4s delay
-    }
-
-    function generateLocalResponse(userMessage) {
-        const lowerMessage = userMessage.toLowerCase();
-
-        // Find best matching category based on keywords
-        for (const entry of knowledgeBase) {
-            for (const keyword of entry.keywords) {
-                if (lowerMessage.includes(keyword)) {
-                    return entry.response;
-                }
+        } catch (error) {
+            hideTypingIndicator();
+            console.error('API Error:', error);
+            if (error.message.includes('API key not valid')) {
+                addMessageToUI("Meeru ichina API key valid kadu andi. Please check in Settings.", 'bot');
+            } else {
+                addMessageToUI("Edo technical problem vachindi. Please try again later.", 'bot');
             }
         }
+    });
 
-        return defaultResponse;
-    }
-
+    // --- Chat Helper Functions ---
     function addMessageToUI(text, sender) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', `${sender}-message`);
@@ -100,7 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
         contentDiv.classList.add('message-content');
 
         if (sender === 'bot') {
-            // Use marked.js to parse markdown
             contentDiv.innerHTML = marked.parse(text);
         } else {
             contentDiv.textContent = text;
@@ -122,7 +204,147 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function scrollToBottom() {
-        const chatContainer = document.getElementById('chat-container');
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        const chatWrapper = document.querySelector('.chat-wrapper');
+        chatWrapper.scrollTop = chatWrapper.scrollHeight;
+    }
+
+    async function fetchGeminiResponse(userMessage) {
+        chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const payload = {
+            system_instruction: { parts: { text: systemInstruction } },
+            contents: chatHistory,
+            generationConfig: { temperature: 0.3 }
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || 'Failed to fetch from Gemini');
+        }
+
+        const data = await response.json();
+        const botResponseText = data.candidates[0].content.parts[0].text;
+
+        chatHistory.push({ role: "model", parts: [{ text: botResponseText }] });
+        return botResponseText;
+    }
+
+    // --- Quiz Logic ---
+    const quizData = [
+        {
+            question: "Voter ID card kosam ye form fill cheyali?",
+            options: ["Form 6", "Form 7", "Form 8", "Form 9"],
+            answer: 0
+        },
+        {
+            question: "India lo minimum voting age entha?",
+            options: ["16 years", "18 years", "21 years", "25 years"],
+            answer: 1
+        },
+        {
+            question: "EVM ante emiti?",
+            options: ["Election Voting Machine", "Electronic Voting Machine", "Electrical Vote Maker", "Electoral Voice Machine"],
+            answer: 1
+        },
+        {
+            question: "None of the Above (NOTA) option eppudu introduce chesaru?",
+            options: ["2009", "2013", "2014", "2019"],
+            answer: 1
+        },
+        {
+            question: "Lok Sabha lo enni elected seats untayi?",
+            options: ["543", "545", "550", "250"],
+            answer: 0
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    const quizIntro = document.getElementById('quiz-intro');
+    const quizActive = document.getElementById('quiz-active');
+    const quizResult = document.getElementById('quiz-result');
+    const startQuizBtn = document.getElementById('start-quiz-btn');
+    const restartQuizBtn = document.getElementById('restart-quiz-btn');
+    const questionText = document.getElementById('question-text');
+    const optionsGrid = document.getElementById('options-grid');
+    const questionCounter = document.getElementById('question-counter');
+    const quizProgressFill = document.getElementById('quiz-progress-fill');
+    const finalScore = document.getElementById('final-score');
+    const scoreMessage = document.getElementById('score-message');
+
+    startQuizBtn.addEventListener('click', startQuiz);
+    restartQuizBtn.addEventListener('click', startQuiz);
+
+    function startQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        quizIntro.classList.add('hidden');
+        quizResult.classList.add('hidden');
+        quizActive.classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const currentQ = quizData[currentQuestionIndex];
+        questionText.textContent = currentQ.question;
+        questionCounter.textContent = `Question ${currentQuestionIndex + 1}/${quizData.length}`;
+        quizProgressFill.style.width = `${((currentQuestionIndex + 1) / quizData.length) * 100}%`;
+
+        optionsGrid.innerHTML = '';
+        currentQ.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.classList.add('quiz-option');
+            btn.textContent = opt;
+            btn.addEventListener('click', () => selectOption(index, btn));
+            optionsGrid.appendChild(btn);
+        });
+    }
+
+    function selectOption(selectedIndex, btnElement) {
+        // Disable all options
+        const allOptions = optionsGrid.querySelectorAll('.quiz-option');
+        allOptions.forEach(opt => opt.style.pointerEvents = 'none');
+
+        const currentQ = quizData[currentQuestionIndex];
+
+        if (selectedIndex === currentQ.answer) {
+            btnElement.classList.add('correct');
+            score++;
+        } else {
+            btnElement.classList.add('wrong');
+            // Highlight correct answer
+            allOptions[currentQ.answer].classList.add('correct');
+        }
+
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }, 1500);
+    }
+
+    function showResults() {
+        quizActive.classList.add('hidden');
+        quizResult.classList.remove('hidden');
+        finalScore.textContent = score;
+
+        if (score === 5) {
+            scoreMessage.textContent = "Excellent! Meekanni telusu! 🎉";
+        } else if (score >= 3) {
+            scoreMessage.textContent = "Good job! Manchi knowledge undi. 👍";
+        } else {
+            scoreMessage.textContent = "Parvaledu, inka nerchukovachu! 📚";
+        }
     }
 });

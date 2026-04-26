@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ElectionIQ - Your Indian Election Assistant</title>
+    <title>ElectionIQ - Civic Tech Dashboard</title>
     <meta name="description"
-        content="An interactive assistant that helps Indian users understand the election process step by step.">
+        content="An interactive Tenglish dashboard helping Indian users understand the election process.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -14,60 +14,244 @@
 </head>
 
 <body>
-    <div class="background-animation"></div>
+    <div class="glow-bg"></div>
+    <div class="glow-blob saffron"></div>
+    <div class="glow-blob green"></div>
 
-    <div class="app-container">
-        <header class="app-header">
-            <div class="logo-container">
-                <div class="logo-icon">🗳️</div>
-                <h1>ElectionIQ</h1>
+    <!-- Onboarding Screen -->
+    <div id="onboarding-overlay" class="onboarding-overlay">
+        <div class="onboarding-card glass-panel">
+            <div class="welcome-icon">🗳️</div>
+            <h2>Welcome to ElectionIQ</h2>
+            <p>To use the AI Chat Assistant, you need a free Gemini API key. Don't worry, it's quick and easy to get!
+            </p>
+
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="get-key-link">
+                Get a free API key here
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+            </a>
+
+            <div class="api-form">
+                <input type="password" id="onboarding-api-key" placeholder="Paste your API key here..."
+                    class="glass-input">
+                <button id="start-app-btn" class="neon-btn">Start Exploring</button>
             </div>
+            <p id="onboarding-status" class="status-msg text-center mt-2"></p>
 
-        </header>
-
-        <main class="chat-container" id="chat-container">
-            <div class="welcome-screen" id="welcome-screen">
-                <div class="welcome-icon">🇮🇳</div>
-                <h2>Namaste! Let's learn about elections.</h2>
-                <p>I'm ElectionIQ, your guide to the Indian democratic process. Ask me anything or choose a topic below.
-                </p>
-
-                <div class="suggested-topics">
-                    <button class="topic-chip">Voter Registration Process</button>
-                    <button class="topic-chip">How do EVM machines work?</button>
-                    <button class="topic-chip">General Election Timeline</button>
-                    <button class="topic-chip">What happens on Voting Day?</button>
-                    <button class="topic-chip">How are results counted?</button>
-                </div>
-            </div>
-
-            <div class="messages" id="messages-area">
-                <!-- Messages will be injected here -->
-            </div>
-
-            <div class="typing-indicator hidden" id="typing-indicator">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-            </div>
-        </main>
-
-        <footer class="input-area">
-            <form id="chat-form">
-                <input type="text" id="user-input" placeholder="Ask a question about Indian elections..."
-                    autocomplete="off" required>
-                <button type="submit" id="send-btn" aria-label="Send message">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                </button>
-            </form>
-        </footer>
+            <button id="skip-onboarding-btn" class="skip-btn">I'll do this later</button>
+        </div>
     </div>
 
+    <div class="dashboard-container" id="main-dashboard" style="display: none;">
 
+        <!-- Mobile Header -->
+        <header class="mobile-header">
+            <div class="brand">
+                <span class="logo-icon">🗳️</span>
+                <h1>ElectionIQ</h1>
+            </div>
+            <button class="menu-toggle" id="menu-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand desktop-brand">
+                <span class="logo-icon neon-text">🗳️</span>
+                <h1 class="neon-text">ElectionIQ</h1>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-target="chat-panel">
+                    <span class="icon">💬</span> Chat Assistant
+                </button>
+                <button class="nav-item" data-target="timeline-panel">
+                    <span class="icon">⏱️</span> Election Timeline
+                </button>
+                <button class="nav-item" data-target="quiz-panel">
+                    <span class="icon">📝</span> Voter Quiz
+                </button>
+                <button class="nav-item" data-target="about-panel">
+                    <span class="icon">ℹ️</span> About & Settings
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <p>Empowering Voters.<br>Mana Voice, Mana Power.</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Chat Panel -->
+            <section id="chat-panel" class="panel active">
+                <div class="panel-header">
+                    <h2>Chat Assistant</h2>
+                    <p class="subtitle">Meeru elections gurinchi emaina adagachu. Tenglish lo matladudam!</p>
+                </div>
+
+                <div class="chat-wrapper glass-panel">
+                    <div class="welcome-screen" id="welcome-screen">
+                        <div class="welcome-icon">🇮🇳</div>
+                        <h3>Namaste! Ee roju elections gurinchi em telusukundam?</h3>
+                        <div class="suggested-topics">
+                            <button class="topic-chip">Voter ID registration ela cheyali?</button>
+                            <button class="topic-chip">EVM machines safe ena?</button>
+                            <button class="topic-chip">Voting day roju em jaruguthundi?</button>
+                            <button class="topic-chip">Election results ela count chestaru?</button>
+                        </div>
+                    </div>
+
+                    <div class="messages" id="messages-area"></div>
+
+                    <div class="typing-indicator hidden" id="typing-indicator">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+
+                <div class="input-area glass-panel">
+                    <form id="chat-form">
+                        <input type="text" id="user-input" placeholder="Type your question here (Tenglish)..."
+                            autocomplete="off" required>
+                        <button type="submit" id="send-btn" class="neon-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Timeline Panel -->
+            <section id="timeline-panel" class="panel">
+                <div class="panel-header">
+                    <h2>Election Timeline</h2>
+                    <p class="subtitle">Elections ela jaruguthayo step-by-step process chudandi.</p>
+                </div>
+                <div class="timeline-wrapper glass-panel">
+                    <div class="timeline">
+                        <div class="timeline-step">
+                            <div class="step-marker">1</div>
+                            <div class="step-content">
+                                <h3>Announcement & Code of Conduct</h3>
+                                <p>Election Commission dates announce chestundi. Appati nunchi Model Code of Conduct
+                                    (MCC) amalu loki vastundi.</p>
+                            </div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-marker">2</div>
+                            <div class="step-content">
+                                <h3>Nominations</h3>
+                                <p>Candidates valla nominations file chestaru. Scrutiny tarvata final list publish
+                                    avthundi.</p>
+                            </div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-marker">3</div>
+                            <div class="step-content">
+                                <h3>Campaigning</h3>
+                                <p>Parties pracharam chestayi. Voting roju ki 48 hours mundu pracharam aagipovali
+                                    (Silence period).</p>
+                            </div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-marker">4</div>
+                            <div class="step-content">
+                                <h3>Polling Day</h3>
+                                <p>Voters EVMs dwara valla vote vestaru. Polling strict security lo jaruguthundi.</p>
+                            </div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-marker">5</div>
+                            <div class="step-content">
+                                <h3>Counting & Results</h3>
+                                <p>EVMs ni open chesi votes count chestaru. Highest votes vachina candidate gelustaru.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quiz Panel -->
+            <section id="quiz-panel" class="panel">
+                <div class="panel-header">
+                    <h2>Voter Quiz</h2>
+                    <p class="subtitle">Mee election knowledge ni test cheskondi!</p>
+                </div>
+                <div class="quiz-wrapper glass-panel" id="quiz-container">
+                    <div id="quiz-intro">
+                        <h3>Ready for the quiz?</h3>
+                        <p>5 questions untayi. Let's see how much you know!</p>
+                        <button id="start-quiz-btn" class="neon-btn lg">Start Quiz</button>
+                    </div>
+
+                    <div id="quiz-active" class="hidden">
+                        <div class="quiz-progress">
+                            <span id="question-counter">Question 1/5</span>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" id="quiz-progress-fill"></div>
+                            </div>
+                        </div>
+                        <h3 id="question-text" class="question-text"></h3>
+                        <div class="options-grid" id="options-grid"></div>
+                    </div>
+
+                    <div id="quiz-result" class="hidden text-center">
+                        <h3 class="neon-text">Quiz Completed!</h3>
+                        <div class="score-display">
+                            <span id="final-score">0</span> / 5
+                        </div>
+                        <p id="score-message">Manchi try!</p>
+                        <button id="restart-quiz-btn" class="neon-btn outline mt-4">Play Again</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- About Panel -->
+            <section id="about-panel" class="panel">
+                <div class="panel-header">
+                    <h2>About & Settings</h2>
+                    <p class="subtitle">App settings and configuration.</p>
+                </div>
+
+                <div class="glass-panel mb-4">
+                    <h3>Gemini API Configuration</h3>
+                    <p class="text-muted mb-4">Mee free Gemini API key enter cheyandi. Idhi app pani cheyadaniki
+                        compulsory.</p>
+                    <div class="api-form">
+                        <input type="password" id="api-key-input" placeholder="Enter Gemini API Key..."
+                            class="glass-input">
+                        <button id="save-key-btn" class="neon-btn">Save Key</button>
+                    </div>
+                    <p id="api-status" class="status-msg"></p>
+                </div>
+
+                <div class="glass-panel">
+                    <h3>About ElectionIQ</h3>
+                    <p class="mb-2">ElectionIQ oka interactive civic-tech dashboard. Indian election process ni simple
+                        ga Tenglish lo explain cheyadaniki design cheyabadindi.</p>
+                    <p class="text-muted text-sm">Powered by Gemini AI • Made with ❤️</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="app.js"></script>
